@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Failure Detective</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #4CAF50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .screen {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .intro-screen {
+            text-align: center;
+        }
+
+        .learning-screen {
+            text-align: left;
+        }
+
+        .failure-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .failure-type-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .failure-type-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .failure-type-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .failure-type-card p {
+            color: #555;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+
+        .failure-example {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .breaking-news {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .scenario-title {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .scenario-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #555;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .question-section {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .voting-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .vote-btn {
+            padding: 20px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .vote-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .vote-btn.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .reveal-btn {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .reveal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .reveal-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reality-section {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .reality-section.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .correct-answer {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .answer-icon {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .explanation {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            float: right;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .start-btn, .continue-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover, .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .final-summary {
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .score-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #27ae60;
+            margin: 10px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕵️ Market Failure Detective</h1>
+            <div class="badge">Interactive Learning Experience</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Introduction Screen -->
+        <div class="screen intro-screen active" id="introScreen">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Welcome, Detective!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px;">
+                You're about to investigate three major market failures that shocked the world. 
+                But first, you need to understand the 5 types of market failures that occur when 
+                free markets don't deliver optimal outcomes for society.
+            </p>
+            <p style="font-size: 1rem; color: #7f8c8d; margin-bottom: 30px;">
+                <strong>Your mission:</strong> Learn the 5 failure types, then identify them in real-world cases
+            </p>
+            <button class="start-btn" onclick="showLearning()">Learn the 5 Market Failures</button>
+        </div>
+
+        <!-- Learning Screen -->
+        <div class="screen learning-screen" id="learningScreen">
+            <h2 style="margin-bottom: 20px; color: #2c3e50; text-align: center;">📚 The 5 Types of Market Failures</h2>
+            <p style="text-align: center; margin-bottom: 30px; font-size: 1.1rem;">
+                Study these carefully - you'll need to identify them in real cases!
+            </p>
+            
+            <div class="failure-types-grid">
+                <div class="failure-type-card">
+                    <h3>🌊 1. Externalities</h3>
+                    <p>Companies don't account for costs imposed on third parties (society, environment, future generations)</p>
+                    <div class="failure-example">Example: Pollution costs borne by communities, not polluters</div>
+                </div>
+                
+                <div class="failure-type-card">
+                    <h3>📊 2. Information Asymmetry</h3>
+                    <p>Consumers can't make informed choices when companies control or hide crucial information</p>
+                    <div class="failure-example">Example: Companies making false environmental claims</div>
+                </div>
+                
+                <div class="failure-type-card">
+                    <h3>⏰ 3. Short-term Focus</h3>
+                    <p>Markets prioritize immediate profits over long-term sustainability and value creation</p>
+                    <div class="failure-example">Example: Quarterly earnings pressure leading to risky decisions</div>
+                </div>
+                
+                <div class="failure-type-card">
+                    <h3>⚖️ 4. Inequality Amplification</h3>
+                    <p>Power imbalances allow exploitation of vulnerable workers and communities</p>
+                    <div class="failure-example">Example: Race to the bottom in labor conditions</div>
+                </div>
+                
+                <div class="failure-type-card">
+                    <h3>👥 5. Narrow Stakeholder Focus</h3>
+                    <p>Pure shareholder primacy ignores broader impacts on society and environment</p>
+                    <div class="failure-example">Example: Maximizing profits while harming communities</div>
+                </div>
+            </div>
+            
+            <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                <h3 style="color: #27ae60; margin-bottom: 10px;">💡 Key Insight</h3>
+                <p>These failures occur because markets optimize for profit, not societal well-being. 
+                Smart government intervention can correct these failures while preserving market benefits.</p>
+            </div>
+            
+            <button class="continue-btn" onclick="startCases()">Ready to Investigate Real Cases!</button>
+        </div>
+
+        <!-- Scenario 1: BP Oil Spill -->
+        <div class="screen" id="scenario1">
+            <div class="breaking-news">🚨 BREAKING NEWS</div>
+            <h2 class="scenario-title">Gulf of Mexico Oil Rig Explosion</h2>
+            <div class="scenario-description">
+                <strong>The Situation:</strong> An offshore drilling rig operated by BP has exploded in the Gulf of Mexico. 
+                Early reports indicate multiple casualties and oil beginning to leak into the ocean. 
+                Investigation reveals BP could have installed a $1 million backup safety system but chose not to in order to save costs.
+                <br><br>
+                <strong>The Outcome:</strong> The spill released 4.9 million barrels of oil, killed 11 workers, devastated 1,300 miles of coastline, 
+                and destroyed billions of oysters. While BP paid $60 billion in fines, society bore much greater costs - 
+                79% of cleanup workers received only $1,300 each for health damages, and ecosystem recovery will take decades.
+            </div>
+            
+            <div class="question-section">
+                <h3>🔍 Detective Question</h3>
+                <p>Which type of market failure does this case best represent?</p>
+            </div>
+            
+            <div class="voting-options">
+                <div class="vote-btn" data-answer="externalities" onclick="selectAnswer(this, 1)">
+                    🌊 Externalities<br>
+                    <small>Costs imposed on third parties</small>
+                </div>
+                <div class="vote-btn" data-answer="information" onclick="selectAnswer(this, 1)">
+                    📊 Information Asymmetry<br>
+                    <small>Hidden information from consumers</small>
+                </div>
+                <div class="vote-btn" data-answer="short-term" onclick="selectAnswer(this, 1)">
+                    ⏰ Short-term Focus<br>
+                    <small>Immediate profits over sustainability</small>
+                </div>
+                <div class="vote-btn" data-answer="inequality" onclick="selectAnswer(this, 1)">
+                    ⚖️ Inequality Amplification<br>
+                    <small>Power imbalances exploit vulnerable groups</small>
+                </div>
+                <div class="vote-btn" data-answer="stakeholder" onclick="selectAnswer(this, 1)">
+                    👥 Narrow Stakeholder Focus<br>
+                    <small>Shareholders over society</small>
+                </div>
+            </div>
+            
+            <button class="reveal-btn" id="reveal1" onclick="showReality(1)" disabled>Reveal the Answer</button>
+            
+            <div class="reality-section" id="reality1">
+                <div class="correct-answer">
+                    <span class="answer-icon">🎯</span>
+                    <strong>Correct Answer: EXTERNALITIES</strong>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">$60B</div>
+                        <div>BP's Fines</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">$1,300</div>
+                        <div>Worker Compensation</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">Decades</div>
+                        <div>Recovery Time</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <strong>Why Externalities:</strong> BP captured oil profits while society bore environmental and health costs 
+                    that weren't reflected in oil prices. The company's $1M cost-cutting led to damages thousands of times greater, 
+                    but those costs were "externalized" onto communities, workers, and ecosystems.
+                </div>
+                
+                <button class="next-btn" onclick="nextScenario(2)">Next Case →</button>
+            </div>
+        </div>
+
+        <!-- Scenario 2: Volkswagen Dieselgate -->
+        <div class="screen" id="scenario2">
+            <div class="breaking-news">🚨 BREAKING NEWS</div>
+            <h2 class="scenario-title">Volkswagen's "Clean Diesel" Deception</h2>
+            <div class="scenario-description">
+                <strong>The Situation:</strong> Volkswagen heavily marketed "clean diesel" vehicles as environmentally friendly, 
+                appealing to conscious consumers willing to pay premium prices for sustainable transportation.
+                <br><br>
+                <strong>The Outcome:</strong> 11 million vehicles contained "defeat devices" making cars emit 40 times legal NOx limits. 
+                Despite consumers paying premiums believing they were making sustainable choices, no consumer could detect the fraud. 
+                The deception was only uncovered through regulatory testing, not consumer discovery. VW paid $31.3 billion in fines.
+            </div>
+            
+            <div class="question-section">
+                <h3>🔍 Detective Question</h3>
+                <p>Which type of market failure does this case best represent?</p>
+            </div>
+            
+            <div class="voting-options">
+                <div class="vote-btn" data-answer="externalities" onclick="selectAnswer(this, 2)">
+                    🌊 Externalities<br>
+                    <small>Costs imposed on third parties</small>
+                </div>
+                <div class="vote-btn" data-answer="information" onclick="selectAnswer(this, 2)">
+                    📊 Information Asymmetry<br>
+                    <small>Hidden information from consumers</small>
+                </div>
+                <div class="vote-btn" data-answer="short-term" onclick="selectAnswer(this, 2)">
+                    ⏰ Short-term Focus<br>
+                    <small>Immediate profits over sustainability</small>
+                </div>
+                <div class="vote-btn" data-answer="inequality" onclick="selectAnswer(this, 2)">
+                    ⚖️ Inequality Amplification<br>
+                    <small>Power imbalances exploit vulnerable groups</small>
+                </div>
+                <div class="vote-btn" data-answer="stakeholder" onclick="selectAnswer(this, 2)">
+                    👥 Narrow Stakeholder Focus<br>
+                    <small>Shareholders over society</small>
+                </div>
+            </div>
+            
+            <button class="reveal-btn" id="reveal2" onclick="showReality(2)" disabled>Reveal the Answer</button>
+            
+            <div class="reality-section" id="reality2">
+                <div class="correct-answer">
+                    <span class="answer-icon">🎯</span>
+                    <strong>Correct Answer: INFORMATION ASYMMETRY</strong>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">11M</div>
+                        <div>Deceived Vehicles</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">40x</div>
+                        <div>Higher Emissions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">0</div>
+                        <div>Consumers Who Detected Fraud</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <strong>Why Information Asymmetry:</strong> VW controlled all information about emissions performance. 
+                    Consumers had no way to verify claims and made decisions based on false data. 
+                    This shows why consumer choice alone cannot drive sustainability when companies can manipulate information.
+                </div>
+                
+                <button class="next-btn" onclick="nextScenario(3)">Next Case →</button>
+            </div>
+        </div>
+
+        <!-- Scenario 3: Rana Plaza -->
+        <div class="screen" id="scenario3">
+            <div class="breaking-news">🚨 BREAKING NEWS</div>
+            <h2 class="scenario-title">Rana Plaza Factory Collapse</h2>
+            <div class="scenario-description">
+                <strong>The Situation:</strong> A garment factory building in Bangladesh showed visible structural cracks. 
+                The building housed factories producing clothes for major Western brands. 
+                Workers earned $38-68 monthly while generating billions for global fashion companies.
+                <br><br>
+                <strong>The Outcome:</strong> The building collapsed, killing 1,134 workers and injuring 2,500 more. 
+                Despite visible cracks, workers were forced to return under threat of wage withholding. 
+                At least 29 brands sourced from Rana Plaza. The race to bottom pricing created what Pope Francis called "slave labour."
+            </div>
+            
+            <div class="question-section">
+                <h3>🔍 Detective Question</h3>
+                <p>Which type of market failure does this case best represent?</p>
+            </div>
+            
+            <div class="voting-options">
+                <div class="vote-btn" data-answer="externalities" onclick="selectAnswer(this, 3)">
+                    🌊 Externalities<br>
+                    <small>Costs imposed on third parties</small>
+                </div>
+                <div class="vote-btn" data-answer="information" onclick="selectAnswer(this, 3)">
+                    📊 Information Asymmetry<br>
+                    <small>Hidden information from consumers</small>
+                </div>
+                <div class="vote-btn" data-answer="short-term" onclick="selectAnswer(this, 3)">
+                    ⏰ Short-term Focus<br>
+                    <small>Immediate profits over sustainability</small>
+                </div>
+                <div class="vote-btn" data-answer="inequality" onclick="selectAnswer(this, 3)">
+                    ⚖️ Inequality Amplification<br>
+                    <small>Power imbalances exploit vulnerable groups</small>
+                </div>
+                <div class="vote-btn" data-answer="stakeholder" onclick="selectAnswer(this, 3)">
+                    👥 Narrow Stakeholder Focus<br>
+                    <small>Shareholders over society</small>
+                </div>
+            </div>
+            
+            <button class="reveal-btn" id="reveal3" onclick="showReality(3)" disabled>Reveal the Answer</button>
+            
+            <div class="reality-section" id="reality3">
+                <div class="correct-answer">
+                    <span class="answer-icon">🎯</span>
+                    <strong>Correct Answer: INEQUALITY AMPLIFICATION</strong>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">1,134</div>
+                        <div>Workers Killed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">$38-68</div>
+                        <div>Monthly Wages</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">29+</div>
+                        <div>Western Brands</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <strong>Why Inequality Amplification:</strong> Massive power imbalances allowed exploitation of vulnerable workers. 
+                    Global brands with billions in revenue could force "race to bottom" pricing that made worker safety impossible. 
+                    Workers had no power to refuse unsafe conditions without losing livelihood.
+                </div>
+                
+                <button class="next-btn" onclick="showSummary()">See Your Results →</button>
+            </div>
+        </div>
+
+        <!-- Final Summary -->
+        <div class="screen final-summary" id="finalSummary">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">🎯 Investigation Complete!</h2>
+            
+            <div class="results-section">
+                <h3>Your Detective Score</h3>
+                <div class="score-display" id="finalScore">0/3 Correct</div>
+                <div id="scoreMessage"></div>
+            </div>
+            
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>🌊 Externalities</h3>
+                    <p>BP Oil Spill - Society pays for environmental damage</p>
+                </div>
+                <div class="summary-card">
+                    <h3>📊 Information Gaps</h3>
+                    <p>VW Dieselgate - Consumers deceived by false claims</p>
+                </div>
+                <div class="summary-card">
+                    <h3>⚖️ Inequality</h3>
+                    <p>Rana Plaza - Power imbalances exploit workers</p>
+                </div>
+            </div>
+            
+            <div style="background: #e8f5e8; padding: 25px; border-radius: 10px; margin: 30px 0;">
+                <h3 style="color: #27ae60; margin-bottom: 15px;">🔍 Key Takeaway</h3>
+                <p style="font-size: 1.1rem; line-height: 1.6;">
+                    Markets are powerful tools for innovation and efficiency, but they systematically fail to address 
+                    environmental costs, information gaps, short-term pressures, inequality, and narrow stakeholder focus. 
+                    Smart government intervention can correct these failures while maintaining economic vitality.
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <h3>🎓 Ready for Class Discussion!</h3>
+                <p>You now understand why ESG frameworks and government intervention are necessary alongside free markets.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScenario = 0;
+        let progress = 0;
+        let userAnswers = [];
+        let correctAnswers = ['externalities', 'information', 'inequality'];
+        let score = 0;
+
+        function showLearning() {
+            document.getElementById('introScreen').classList.remove('active');
+            document.getElementById('learningScreen').classList.add('active');
+            updateProgress(20);
+        }
+
+        function startCases() {
+            document.getElementById('learningScreen').classList.remove('active');
+            document.getElementById('scenario1').classList.add('active');
+            currentScenario = 1;
+            updateProgress(30);
+        }
+
+        function selectAnswer(element, scenario) {
+            // Remove selected class from all buttons in this scenario
+            const buttons = element.parentElement.querySelectorAll('.vote-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            element.classList.add('selected');
+            
+            // Store the answer
+            userAnswers[scenario - 1] = element.getAttribute('data-answer');
+            
+            // Enable reveal button
+            document.getElementById(`reveal${scenario}`).disabled = false;
+        }
+
+        function showReality(scenario) {
+            document.getElementById(`reality${scenario}`).classList.add('active');
+            
+            // Check if answer is correct
+            if (userAnswers[scenario - 1] === correctAnswers[scenario - 1]) {
+                score++;
+            }
+            
+            updateProgress(progress + 15);
+        }
+
+        function nextScenario(scenario) {
+            document.getElementById(`scenario${currentScenario}`).classList.remove('active');
+            document.getElementById(`scenario${scenario}`).classList.add('active');
+            currentScenario = scenario;
+            updateProgress(progress + 5);
+        }
+
+        function showSummary() {
+            document.getElementById(`scenario${currentScenario}`).classList.remove('active');
+            document.getElementById('finalSummary').classList.add('active');
+            
+            // Display final score
+            document.getElementById('finalScore').textContent = `${score}/3 Correct`;
+            
+            let message = '';
+            if (score === 3) {
+                message = '🏆 Perfect! You\'re a market failure expert!';
+            } else if (score === 2) {
+                message = '👍 Great job! You understand most market failure types.';
+            } else if (score === 1) {
+                message = '📚 Good start! Review the 5 types for better understanding.';
+            } else {
+                message = '🔄 Take time to review - this is complex material!';
+            }
+            
+            document.getElementById('scoreMessage').textContent = message;
+            updateProgress(100);
+        }
+
+        function updateProgress(newProgress) {
+            progress = newProgress;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+    </script>
+</body>
+</html>
